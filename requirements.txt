@@ -1,0 +1,7 @@
+Flask
+Flask-Migrate
+Flask-SQLAlchemy
+SQLAlchemy
+alembic
+gunicorn
+psycopg[binary]

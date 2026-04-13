@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel | SherbimiYt</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="admin-header">
+    <div class="container admin-topbar">
+      <div>
+        <h1>Admin Panel</h1>
+        <p>Menaxho freelancerët, shërbimet dhe mesazhet.</p>
+      </div>
+      <div class="admin-actions">
+        <a class="btn btn-secondary" href="{{ url_for('public.index') }}">Kthehu në faqe</a>
+        <a class="btn btn-light" href="{{ url_for('admin.logout') }}">Dil / Logout</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container">
+      <div class="admin-actions" style="margin-bottom: 24px;">
+        <a class="btn btn-secondary" href="{{ url_for('admin.dashboard') }}">Dashboard</a>
+        <a class="btn btn-secondary" href="{{ url_for('admin.banner') }}">Banner Reklamues</a>
+        <a class="btn btn-secondary" href="{{ url_for('admin.add_freelancer') }}">Shto freelancer</a>
+        <a class="btn btn-secondary" href="{{ url_for('admin.list_freelancers') }}">Shiko freelancerët</a>
+        <a class="btn btn-secondary" href="{{ url_for('admin.messages') }}">Mesazhet</a>
+      </div>
+
+      {% with flashes = get_flashed_messages(with_categories=true) %}
+        {% for category, message in flashes %}
+        <p class="form-message {{ category }}">{{ message }}</p>
+        {% endfor %}
+      {% endwith %}
+
+      {% if section == "dashboard" %}
+      <div class="category-grid">
+        <a class="info-card" href="{{ url_for('admin.add_freelancer') }}">
+          <h2>Shto freelancer</h2>
+          <p>Krijo një listing të ri.</p>
+        </a>
+        <a class="info-card" href="{{ url_for('admin.list_freelancers') }}">
+          <h2>{{ freelancers|length }} freelancerë</h2>
+          <p>{{ freelancers|selectattr("premium")|list|length }} premium.</p>
+        </a>
+        <a class="info-card" href="{{ url_for('admin.messages') }}">
+          <h2>{{ messages|length }} mesazhe</h2>
+          <p>Lexo mesazhet nga forma e kontaktit.</p>
+        </a>
+        <a class="info-card" href="{{ url_for('admin.banner') }}">
+          <h2>Banner Reklamues</h2>
+          <p>Ngarko ose fshij foton e ballinës.</p>
+        </a>
+      </div>
+      {% endif %}
+
+      {% if section == "banner" %}
+      <section class="form-card">
+        <h2>Banner Reklamues</h2>
+        {% if banner.image %}
+        <div class="banner-preview">
+          <img src="{{ banner.image }}" alt="Banner reklamues aktual">
+        </div>
+        {% endif %}
+        <form method="post" enctype="multipart/form-data">
+          <label for="image_upload">Ngarko foto</label>
+          <input id="image_upload" name="image_upload" type="file" accept="image/*" required>
+
+          <div class="form-actions">
+            <button class="btn btn-primary" type="submit">Ruaj / Ndrysho</button>
+          </div>
+        </form>
+
+        {% if banner.image %}
+        <form method="post" action="{{ url_for('admin.delete_banner') }}" style="margin-top: 12px;" onsubmit="return confirm('A jeni i sigurt që dëshironi ta fshini foton?');">
+          <button class="btn btn-light" type="submit">Fshij foton</button>
+        </form>
+        {% endif %}
+      </section>
+      {% endif %}
+
+      {% if section == "form" %}
+      <section class="form-card">
+        <h2>{{ "Edito freelancer" if freelancer else "Shto freelancer" }}</h2>
+        <form method="post" enctype="multipart/form-data">
+          <label for="name">Emri i plotë ose biznesi</label>
+          <input id="name" name="name" type="text" value="{{ freelancer.name if freelancer else '' }}" required>
+
+          <label for="title">Profesioni / titulli i shërbimit</label>
+          <input id="title" name="title" type="text" value="{{ freelancer.title if freelancer else '' }}" required>
+
+          <label for="category">Kategoria</label>
+          <select id="category" name="category" required>
+            <option value="">Zgjidh kategorinë</option>
+            {% for category in categories %}
+            <option value="{{ category }}" {% if freelancer and freelancer.category == category %}selected{% endif %}>{{ category }}</option>
+            {% endfor %}
+          </select>
+
+          <label for="city">Qyteti</label>
+          <select id="city" name="city" required>
+            <option value="">Zgjidh qytetin</option>
+            {% for city in cities %}
+            <option value="{{ city }}" {% if freelancer and freelancer.city == city %}selected{% endif %}>{{ city }}</option>
+            {% endfor %}
+          </select>
+
+          <label for="description">Përshkrimi i shkurtër</label>
+          <textarea id="description" name="description" rows="4" required>{{ freelancer.description if freelancer else '' }}</textarea>
+
+          <label for="phone">Numri i telefonit</label>
+          <input id="phone" name="phone" type="text" value="{{ freelancer.phone if freelancer else '' }}">
+
+          <label for="whatsapp">WhatsApp link</label>
+          <input id="whatsapp" name="whatsapp" type="url" value="{{ freelancer.whatsapp if freelancer else '' }}" placeholder="https://wa.me/38344111222">
+
+          <label for="instagram">Instagram link</label>
+          <input id="instagram" name="instagram" type="url" value="{{ freelancer.instagram if freelancer else '' }}" placeholder="https://instagram.com/...">
+
+          <label for="address">Lokacioni / adresa opsionale</label>
+          <input id="address" name="address" type="text" value="{{ freelancer.address if freelancer else '' }}">
+
+          <label for="image">Image path ose URL</label>
+          <input id="image" name="image" type="text" value="{{ freelancer.image if freelancer else '' }}" placeholder="/static/uploads/foto.jpg">
+
+          <label for="image_upload">Ose ngarko imazh</label>
+          <input id="image_upload" name="image_upload" type="file" accept="image/*">
+
+          <label class="checkbox-row">
+            <input name="premium" type="checkbox" {% if freelancer and freelancer.premium %}checked{% endif %}>
+            Premium
+          </label>
+
+          <div class="form-actions">
+            <button class="btn btn-primary" type="submit">Ruaj</button>
+            <a class="btn btn-light" href="{{ url_for('admin.list_freelancers') }}">Anulo</a>
+          </div>
+        </form>
+      </section>
+      {% endif %}
+
+      {% if section == "list" %}
+      <section>
+        <div class="section-heading left">
+          <span class="eyebrow">Lista</span>
+          <h2>Freelancerët / shërbimet</h2>
+        </div>
+        <div class="admin-list">
+          {% for freelancer in freelancers %}
+          <article class="admin-item">
+            <img src="{{ freelancer.image }}" alt="{{ freelancer.name }}">
+            <div>
+              <h3>{{ freelancer.name }}</h3>
+              <p>{{ freelancer.title }} · {{ freelancer.city }} · {{ freelancer.category }}</p>
+              <div class="meta">
+                <span class="badge {{ 'badge-premium' if freelancer.premium else '' }}">{{ "Premium" if freelancer.premium else "Standard" }}</span>
+              </div>
+              <div class="admin-actions">
+                <a class="btn btn-secondary" href="{{ url_for('admin.edit_freelancer', freelancer_id=freelancer.id) }}">Edito</a>
+                <form method="post" action="{{ url_for('admin.delete_freelancer', freelancer_id=freelancer.id) }}" onsubmit="return confirm('A jeni i sigurt që dëshironi ta fshini?');">
+                  <button class="btn btn-light" type="submit">Fshij</button>
+                </form>
+              </div>
+            </div>
+          </article>
+          {% else %}
+          <p>Nuk ka ende freelancerë.</p>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+
+      {% if section == "messages" %}
+      <section>
+        <div class="section-heading left">
+          <span class="eyebrow">Kontakt</span>
+          <h2>Mesazhet</h2>
+        </div>
+        <div class="admin-list">
+          {% for message in messages %}
+          <article class="info-card">
+            <h3>{{ message.subject }}</h3>
+            <p><strong>{{ message.name }}</strong> · {{ message.email }} · {{ message.date }}</p>
+            <p>{{ message.message }}</p>
+            <form method="post" action="{{ url_for('admin.delete_message', message_id=message.id) }}" onsubmit="return confirm('A jeni i sigurt që dëshironi ta fshini mesazhin?');">
+              <button class="btn btn-light" type="submit">Fshij</button>
+            </form>
+          </article>
+          {% else %}
+          <p>Nuk ka ende mesazhe.</p>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+    </div>
+  </main>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

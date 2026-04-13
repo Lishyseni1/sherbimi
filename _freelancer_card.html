@@ -1,0 +1,14 @@
+<article class="freelancer-card">
+  <img src="{{ freelancer.image }}" alt="{{ freelancer.name }}">
+  <div class="freelancer-body">
+    <div class="meta">
+      {% if freelancer.premium %}<span class="badge badge-premium">Premium</span>{% endif %}
+      <span class="badge">{{ freelancer.city }}</span>
+    </div>
+    <h3>{{ freelancer.name }}</h3>
+    <p class="freelancer-title">{{ freelancer.title or freelancer.category }}</p>
+    <p class="freelancer-location">{{ freelancer.category }}</p>
+    <p class="freelancer-location">{{ freelancer.city }}</p>
+    <a class="btn btn-primary" href="{{ url_for('public.freelancer_detail', id=freelancer.id) }}">{{ button_label | default("Detajet") }}</a>
+  </div>
+</article>

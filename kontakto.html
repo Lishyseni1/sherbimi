@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kontakto | SherbimiYt</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="site-header">
+    <nav class="navbar container" aria-label="Navigimi kryesor">
+      <a class="logo" href="{{ url_for('public.index') }}">SherbimiYt</a>
+      <button class="menu-toggle" type="button" aria-label="Hap menunë" aria-expanded="false">☰</button>
+      <ul class="nav-links">
+        <li><a href="{{ url_for('public.index') }}">Ballina</a></li>
+        <li><a href="{{ url_for('public.freelancers') }}">Freelancerët</a></li>
+        <li><a href="{{ url_for('public.services') }}">Shërbimet</a></li>
+        <li><a href="{{ url_for('public.about') }}">Rreth Nesh</a></li>
+        <li><a class="active" href="{{ url_for('public.contact') }}">Kontakto</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="page-main">
+    <section class="page-hero">
+      <div class="container narrow">
+        <span class="eyebrow">Na shkruaj</span>
+        <h1>Kontakto SherbimiYt</h1>
+        <p>Na dërgo pyetjen ose kërkesën tënde dhe do të të kontaktojmë sa më shpejt.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container contact-layout">
+        <form class="form-card" method="post" action="{{ url_for('public.contact') }}">
+          <label for="contactName">Emri</label>
+          <input id="contactName" name="name" type="text" placeholder="Shkruaj emrin" required>
+          <label for="contactEmail">Email</label>
+          <input id="contactEmail" name="email" type="email" placeholder="email@shembull.com" required>
+          <label for="contactSubject">Subjekti</label>
+          <input id="contactSubject" name="subject" type="text" placeholder="P.sh. Bashkëpunim" required>
+          <label for="contactMessage">Mesazhi</label>
+          <textarea id="contactMessage" name="message" rows="6" placeholder="Shkruaj mesazhin" required></textarea>
+          <button class="btn btn-primary" type="submit">Dërgo</button>
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+            <p class="form-message {{ category }}">{{ message }}</p>
+            {% endfor %}
+          {% endwith %}
+        </form>
+
+        <aside class="info-card contact-info">
+          <h2>Informata kontakti</h2>
+          <p><strong>Email:</strong> sherbimiyt@outlook.com</p>
+          <p><strong>Qyteti:</strong> Prishtinë, Kosovë</p>
+          <p><strong>Instagram:</strong> <a class="social-link" href="#" aria-label="Instagram">Instagram</a></p>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div>
+        <a class="footer-logo" href="{{ url_for('public.index') }}">SherbimiYt</a>
+        <p>Platformë e thjeshtë për të gjetur shërbime freelance në Kosovë.</p>
+      </div>
+      <div>
+        <h3>Lidhje</h3>
+        <a href="{{ url_for('public.index') }}">Ballina</a>
+        <a href="{{ url_for('public.freelancers') }}">Freelancerët</a>
+        <a href="{{ url_for('public.services') }}">Shërbimet</a>
+      </div>
+      <div>
+        <h3>Kontakt</h3>
+        <p>Prishtinë, Kosovë</p>
+        <p>sherbimiyt@outlook.com</p>
+        <a class="social-link" href="#" aria-label="Instagram">Instagram</a>
+      </div>
+    </div>
+    <p class="copyright">© 2026 SherbimiYt. Të gjitha të drejtat e rezervuara.</p>
+  </footer>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
