@@ -8,6 +8,7 @@ from .extensions import db, migrate
 def _normalize_database_url(url):
     if not url:
         return "sqlite:///app.db"
+    url = url.strip()
     if url.startswith("postgres://"):
         return url.replace("postgres://", "postgresql://", 1)
     return url
