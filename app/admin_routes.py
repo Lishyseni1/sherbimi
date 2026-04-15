@@ -14,6 +14,7 @@ from .services import (
     get_freelancers,
     get_home_banner,
     get_messages,
+    get_service_category_groups,
     save_freelancer,
     save_home_banner_upload,
     validate_freelancer_form,
@@ -23,13 +24,15 @@ admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
 
 def render_admin(section, freelancer=None):
+    freelancers = get_freelancers()
     return render_template(
         "admin.html",
         section=section,
         freelancer=freelancer,
-        freelancers=get_freelancers(),
+        freelancers=freelancers,
         messages=get_messages(),
         categories=SERVICE_CATEGORIES,
+        category_groups=get_service_category_groups(freelancers),
         cities=KOSOVO_CITIES,
         banner=get_home_banner(),
     )

@@ -9,6 +9,7 @@ from .services import (
     get_freelancer_by_id,
     get_freelancers,
     get_home_banner,
+    get_service_category_groups,
     merge_options,
     validate_contact_form,
 )
@@ -52,10 +53,12 @@ def freelancers():
 
     categories = merge_options(SERVICE_CATEGORIES, all_freelancers, "category")
     cities = merge_options(KOSOVO_CITIES, all_freelancers, "city")
+    category_groups = get_service_category_groups(all_freelancers)
     return render_template(
         "freelancers.html",
         freelancers=filtered,
         categories=categories,
+        category_groups=category_groups,
         cities=cities,
         selected_search=request.args.get("search", ""),
         selected_category=category,
@@ -106,7 +109,7 @@ def contact():
 @public_bp.route("/sherbimet")
 @public_bp.route("/sherbimet.html")
 def services():
-    return render_template("sherbimet.html")
+    return render_template("sherbimet.html", category_groups=get_service_category_groups())
 
 
 @public_bp.route("/rreth-nesh")

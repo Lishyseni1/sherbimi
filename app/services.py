@@ -34,6 +34,60 @@ SERVICE_CATEGORIES = [
 ]
 
 
+KOSOVO_CITIES = [
+    "Prishtinë", "Prizren", "Pejë", "Gjakovë", "Gjilan", "Ferizaj", "Mitrovicë", "Podujevë",
+    "Vushtrri", "Suharekë", "Rahovec", "Drenas", "Lipjan", "Fushë Kosovë", "Malishevë",
+    "Deçan", "Klinë", "Skenderaj", "Istog", "Kaçanik", "Shtime", "Obiliq", "Dragash",
+    "Kamenicë", "Viti", "Novobërdë", "Graçanicë", "Hani i Elezit", "Junik", "Mamushë",
+]
+SERVICE_CATEGORIES = [
+    "Zhvillim Web", "Dizajn Grafik", "UI/UX Dizajn", "Marketing Digjital",
+    "Menaxhim i Rrjeteve Sociale", "SEO", "Copywriting", "Përkthime",
+    "Video Editim", "Fotografi", "Web Designer", "Programim Python",
+    "Elektricist", "Hidraulik", "Pastrim Shtëpish", "Pastrim Zyrash",
+    "Instalues Kamerash", "Servis Kompjuterësh", "Fotograf Eventesh",
+    "Videograf Eventesh", "DJ", "Dekorues Eventesh", "Grimer", "Berber",
+    "Trajner Personal", "Babysitter", "Kujdes për të Moshuar",
+    "Arkitekt", "Dizajn Interieri", "Konsulencë Marketingu", "Konsulencë Biznesi",
+]
+
+SERVICE_CATEGORY_GROUPS = {
+    "Sh\u00ebrbime nga sht\u00ebpia": [
+        "Zhvillim Web", "Zhvillim Frontend", "Zhvillim Backend", "Full Stack Development",
+        "Dizajn Grafik", "UI/UX Dizajn", "Logo Dizajn", "Brand Identity", "Marketing Digjital",
+        "Menaxhim i Rrjeteve Sociale", "SEO", "Google Ads / Facebook Ads", "Copywriting",
+        "Shkrim Artikujsh", "P\u00ebrkthime", "Data Entry", "Virtual Assistant", "Mb\u00ebshtetje Administrative",
+        "Krijim Prezantimesh", "Video Editim", "Motion Design", "Animacion 2D",
+        "Montazh p\u00ebr TikTok / Reels / YouTube", "Fotomanipulim", "Ilustrime Digjitale",
+        "Voice Over", "Transkriptim", "Konsulenc\u00eb IT", "Testim i Webfaqeve",
+        "Menaxhim Email Marketing", "Krijim Dyqanesh Online", "WordPress Development",
+        "Shopify Support", "Programim Python", "Programim .NET", "M\u00ebsim Online / Tutor",
+        "Konsulenc\u00eb Biznesi", "Sh\u00ebrbime Kontabiliteti Online",
+    ],
+    "Sh\u00ebrbime n\u00eb terren": [
+        "Elektricist", "Uj\u00ebsjell\u00ebs / Hidraulik", "Murator", "Piktor / Lyerje", "Punime Gipsi",
+        "Keramist", "Montues Kuzhinash", "Montues Dyersh dhe Dritaresh", "Riparime Sht\u00ebpiake",
+        "Pastrim Sht\u00ebpish", "Pastrim Zyrash", "Kopshtar", "Mir\u00ebmbajtje Oborri",
+        "Servis Kompjuter\u00ebsh n\u00eb vend", "Servis Telefonash", "Instalues Kamerash",
+        "Instalues Interneti / Rrjeti", "Fotograf Eventesh", "Videograf Eventesh", "DJ",
+        "K\u00ebng\u00ebtar p\u00ebr evente", "Dekorues Eventesh", "Organizues Dasmash", "Cameraman",
+        "Shofer Privat", "Transport i Vog\u00ebl", "Asistent Teknik p\u00ebr Evente",
+        "Grimer / Make-up Artist", "Frizer n\u00eb vend", "Berber", "Estetiste", "Masazhist",
+        "Trajner Personal", "Instruktor Fitnesi n\u00eb vend", "Babysitter", "Kujdes p\u00ebr t\u00eb Moshuar",
+        "Roje / Security p\u00ebr evente", "Pun\u00ebtor Nd\u00ebrtimi", "Instalues Klimash",
+        "Servis i Pajisjeve Sht\u00ebpiake",
+    ],
+    "Sh\u00ebrbime hibride": [
+        "Fotografi", "Videografi", "Konsulenc\u00eb Marketingu", "Konsulenc\u00eb Ligjore",
+        "Konsulenc\u00eb Kontabiliteti", "Arkitekt", "Dizajn Interieri", "Agjent Imobiliar",
+        "Trajnime Private", "Tutor n\u00eb sht\u00ebpi", "Teknik IT", "Specialist Rrjetesh",
+        "Specialist Branding", "Menaxher Projekti Freelance", "Event Manager",
+        "Social Media Content Creator", "SEO Specialist", "Web Designer", "Freelancer p\u00ebr Biznese Lokale",
+    ],
+}
+SERVICE_CATEGORIES = [item for items in SERVICE_CATEGORY_GROUPS.values() for item in items]
+
+
 def ensure_upload_directories(upload_folder):
     os.makedirs(upload_folder, exist_ok=True)
     os.makedirs(os.path.join(upload_folder, "banner"), exist_ok=True)
@@ -126,6 +180,32 @@ def parse_legacy_date(value):
 def merge_options(defaults, items, attr):
     saved_values = [getattr(item, attr, "") for item in items if getattr(item, attr, "")]
     return sorted(set(defaults + saved_values))
+
+
+def get_service_category_groups(items=None):
+    items = items or []
+    grouped = []
+    seen = set()
+
+    for label, defaults in SERVICE_CATEGORY_GROUPS.items():
+        merged = []
+        for category in defaults:
+            if category and category not in merged:
+                merged.append(category)
+                seen.add(category)
+
+        grouped.append({"label": label, "items": merged})
+
+    extras = []
+    for item in items:
+        value = getattr(item, "category", "") if hasattr(item, "category") else item
+        if value and value not in seen and value not in extras:
+            extras.append(value)
+
+    if extras:
+        grouped.append({"label": "Kategori t\u00eb tjera", "items": sorted(extras)})
+
+    return grouped
 
 
 def get_freelancers():

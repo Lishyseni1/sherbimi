@@ -95,8 +95,12 @@
           <label for="category">Kategoria</label>
           <select id="category" name="category" required>
             <option value="">Zgjidh kategorinë</option>
-            {% for category in categories %}
-            <option value="{{ category }}" {% if freelancer and freelancer.category == category %}selected{% endif %}>{{ category }}</option>
+            {% for group in category_groups %}
+            <optgroup label="{{ group['label'] }}">
+              {% for category in group['items'] %}
+              <option value="{{ category }}" {% if freelancer and freelancer.category == category %}selected{% endif %}>{{ category }}</option>
+              {% endfor %}
+            </optgroup>
             {% endfor %}
           </select>
 
