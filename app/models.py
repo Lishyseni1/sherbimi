@@ -82,3 +82,13 @@ class SiteAsset(TimestampMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     key = db.Column(db.String(120), unique=True, nullable=False, index=True)
     value = db.Column(db.String(500), nullable=False, default="")
+
+
+class UploadedImage(TimestampMixin, db.Model):
+    __tablename__ = "uploaded_images"
+
+    id = db.Column(db.Integer, primary_key=True)
+    storage_key = db.Column(db.String(64), unique=True, nullable=False, index=True)
+    original_filename = db.Column(db.String(255), nullable=False, default="")
+    mime_type = db.Column(db.String(120), nullable=False, default="application/octet-stream")
+    data = db.Column(db.LargeBinary, nullable=False)

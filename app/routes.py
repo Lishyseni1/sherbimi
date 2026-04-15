@@ -1,5 +1,7 @@
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, abort, flash, redirect, render_template, request, send_file, url_for
+from io import BytesIO
 
+from .models import UploadedImage
 from .services import (
     KOSOVO_CITIES,
     SERVICE_CATEGORIES,
@@ -72,6 +74,20 @@ def freelancer_detail():
     freelancer_id = request.args.get("id", type=int)
     freelancer = get_freelancer_by_id(freelancer_id) if freelancer_id else None
     return render_template("freelancer-detail.html", freelancer=freelancer)
+
+
+@public_bp.route("/media/<storage_key>")
+def uploaded_media(storage_key):
+    image = UploadedImage.query.filter_by(storage_key=storage_key).first()
+    if image is None:
+        abort(404)
+
+    return send_file(
+        BytesIO(image.data),
+        mimetype=image.mime_type,
+        download_name=image.original_filename or f"{storage_key}.bin",
+        max_age=31536000,
+    )
 
 
 @public_bp.route("/kontakto", methods=["GET", "POST"])

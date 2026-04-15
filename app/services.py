@@ -7,7 +7,7 @@ from flask import current_app
 from werkzeug.utils import secure_filename
 
 from .extensions import db
-from .models import AdminUser, ContactMessage, Freelancer, SiteAsset
+from .models import AdminUser, ContactMessage, Freelancer, SiteAsset, UploadedImage
 
 DATA_FOLDER = "data"
 FREELANCERS_FILE = os.path.join(DATA_FOLDER, "freelancers.json")
@@ -110,6 +110,8 @@ def import_legacy_data():
 
     if imported:
         db.session.commit()
+
+    migrate_stored_images_to_database()
 
 
 def parse_legacy_date(value):
@@ -233,18 +235,19 @@ def save_upload_to_folder(file, subfolder):
     extension = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
     if extension not in ALLOWED_EXTENSIONS:
         return ""
+    content = file.read()
+    if not content:
+        return ""
 
-    unique_name = f"{uuid4().hex}_{filename}"
-    base_upload_folder = current_app.config["UPLOAD_FOLDER"]
-    disk_path = os.path.join(base_upload_folder, *(subfolder.split(os.sep) if subfolder else []), unique_name)
-    os.makedirs(os.path.dirname(disk_path), exist_ok=True)
-    file.save(disk_path)
-
-    path_parts = ["static", "uploads"]
-    if subfolder:
-        path_parts.extend(subfolder.replace("\\", "/").strip("/").split("/"))
-    path_parts.append(unique_name)
-    return "/" + "/".join(path_parts)
+    uploaded = UploadedImage(
+        storage_key=uuid4().hex,
+        original_filename=filename,
+        mime_type=(file.mimetype or f"image/{extension}"),
+        data=content,
+    )
+    db.session.add(uploaded)
+    db.session.flush()
+    return build_media_path(uploaded.storage_key)
 
 
 def save_home_banner_upload(file):
@@ -262,10 +265,82 @@ def clear_home_banner():
 
 
 def delete_uploaded_file(image_path):
-    if not image_path or not image_path.startswith("/static/"):
+    if not image_path:
+        return
+    if image_path.startswith("/media/"):
+        storage_key = image_path.rsplit("/", 1)[-1].strip()
+        if not storage_key:
+            return
+        uploaded = UploadedImage.query.filter_by(storage_key=storage_key).first()
+        if uploaded is not None:
+            db.session.delete(uploaded)
+            db.session.flush()
+        return
+
+    if not image_path.startswith("/static/"):
         return
 
     relative_path = image_path.replace("/static/", "", 1).replace("/", os.sep)
-    file_path = os.path.join("static", relative_path)
+    file_path = os.path.join(current_app.root_path, "..", "static", relative_path)
+    file_path = os.path.abspath(file_path)
     if os.path.exists(file_path):
         os.remove(file_path)
+
+
+def migrate_stored_images_to_database():
+    freelancers = Freelancer.query.filter(Freelancer.image.like("/static/uploads/%")).all()
+    banner = get_home_banner().get("image", "")
+    banner_needs_migration = banner.startswith("/static/uploads/")
+
+    if not freelancers and not banner_needs_migration:
+        return
+
+    changed = False
+
+    for freelancer in freelancers:
+        migrated_image = migrate_local_image_path_to_database(freelancer.image)
+        if migrated_image:
+            freelancer.image = migrated_image
+            changed = True
+
+    if banner_needs_migration:
+        migrated_banner = migrate_local_image_path_to_database(banner)
+        if migrated_banner:
+            set_home_banner(migrated_banner)
+            changed = False
+
+    if changed:
+        db.session.commit()
+
+
+def migrate_local_image_path_to_database(image_path):
+    if not image_path or not image_path.startswith("/static/uploads/"):
+        return ""
+
+    relative_path = image_path.replace("/static/", "", 1).replace("/", os.sep)
+    file_path = os.path.join(current_app.root_path, "..", "static", relative_path)
+    file_path = os.path.abspath(file_path)
+    if not os.path.exists(file_path):
+        return ""
+
+    filename = os.path.basename(file_path)
+    extension = filename.rsplit(".", 1)[-1].lower() if "." in filename else "bin"
+    with open(file_path, "rb") as uploaded_file:
+        content = uploaded_file.read()
+
+    if not content:
+        return ""
+
+    uploaded = UploadedImage(
+        storage_key=uuid4().hex,
+        original_filename=filename,
+        mime_type=f"image/{'jpeg' if extension == 'jpg' else extension}",
+        data=content,
+    )
+    db.session.add(uploaded)
+    db.session.flush()
+    return build_media_path(uploaded.storage_key)
+
+
+def build_media_path(storage_key):
+    return f"/media/{storage_key}"

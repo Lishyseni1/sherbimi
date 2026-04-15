@@ -1,4 +1,5 @@
 import os
+import sys
 
 from flask import Flask
 
@@ -17,7 +18,10 @@ def _normalize_database_url(url):
 def create_app():
     app = Flask(__name__, template_folder="..", static_folder="../static")
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "change-this-simple-secret-key")
-    app.config["UPLOAD_FOLDER"] = os.path.join("static", "uploads")
+    default_upload_folder = os.path.join(app.root_path, "..", "static", "uploads")
+    app.config["UPLOAD_FOLDER"] = os.path.abspath(
+        os.getenv("UPLOAD_FOLDER", default_upload_folder)
+    )
     app.config["SQLALCHEMY_DATABASE_URI"] = _normalize_database_url(os.getenv("DATABASE_URL"))
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_pre_ping": True}
@@ -34,6 +38,7 @@ def create_app():
 
     with app.app_context():
         ensure_upload_directories(app.config["UPLOAD_FOLDER"])
-        bootstrap_database()
+        if "db" not in sys.argv:
+            bootstrap_database()
 
     return app
