@@ -165,7 +165,7 @@ def create_freelancer_from_form(form, file=None, existing=None):
     freelancer.image = image
     freelancer.premium = form.get("premium") == "on"
 
-    if uploaded_image and previous_image and previous_image != uploaded_image and previous_image.startswith("/static/"):
+    if uploaded_image and previous_image and previous_image != uploaded_image:
         delete_uploaded_file(previous_image)
 
     return freelancer
@@ -178,7 +178,7 @@ def save_freelancer(freelancer):
 
 
 def delete_freelancer(freelancer):
-    if freelancer.image and freelancer.image.startswith("/static/"):
+    if freelancer.image:
         delete_uploaded_file(freelancer.image)
     db.session.delete(freelancer)
     db.session.commit()
@@ -307,7 +307,7 @@ def migrate_stored_images_to_database():
         migrated_banner = migrate_local_image_path_to_database(banner)
         if migrated_banner:
             set_home_banner(migrated_banner)
-            changed = False
+            changed = True
 
     if changed:
         db.session.commit()
